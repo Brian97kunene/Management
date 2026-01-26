@@ -24,5 +24,19 @@
 .add_new_prod_sec {
     background-color: seagreen;
     padding: 10px;
+    margin: 20px;
    
+}
+
+    .add_new_prod_sec input {
+        margin-right: 10px;
+        height: 25px;
+    }
+
+
+
+.prod_table {
+    width: 900px;
+    border:solid black 1px;
+    padding:20px;
 }

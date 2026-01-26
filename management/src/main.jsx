@@ -4,12 +4,14 @@ import './index.css'
 
 
 import Users from './Users.jsx'
+import EditableUsers from './Products_Editable.jsx'
 
 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>           
         <Users />
+        <EditableUsers />
   </StrictMode>,
 )
 
