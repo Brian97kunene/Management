@@ -1,0 +1,28 @@
+.users {
+    border:double black 2px;
+
+}
+
+.main {
+
+    margin: 20px;
+    margin-left: 200px;
+    padding: 20px;
+}
+.userslist {
+    list-style-type: none;
+}
+.header {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 44px;
+    color: black;
+    padding: 10px;
+    text-align: center;
+
+}
+
+.add_new_prod_sec {
+    background-color: seagreen;
+    padding: 10px;
+   
+}
