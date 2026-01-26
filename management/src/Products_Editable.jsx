@@ -7,7 +7,7 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
     const handleUpdate = async () => {
         try {
             const port = 5525;
-            const response = await fetch(`http://localhost:`+port+`/users/${user.id}`, {
+            const response = await fetch(`http://localhost:5525/updateuser/${user.Id}`, {
                 method: "PUT", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -20,7 +20,7 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
             }
 
             const updatedUser = await response.json();
-            onUpdated(updatedUser); // notify parent
+            onUpdated(updatedUser.data); // notify parent
             onClose(); // close editor
         } catch (error) {
             console.error("Error updating user:", error);
@@ -69,7 +69,7 @@ const UserList = () => {
 
     // Update user in state after editing
     const handleUserUpdated = (updatedUser) => {
-        setUsers(users.map(u => (u.id === updatedUser.id ? updatedUser : u)));
+        setUsers(users.map(u => (u.Id === updatedUser.Id ? updatedUser : u)));
     };
 
     return (
@@ -77,7 +77,7 @@ const UserList = () => {
             <h2>User List</h2>
             <ul>
                 {users.map(u => (
-                    <li key={u.id}>
+                    <li key={u.Id}>
                         {u.name} ({u.description})
                         <button onClick={() => setEditingUser(u)}>Edit</button>
                     </li>

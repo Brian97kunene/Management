@@ -92,23 +92,23 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-//// UPDATE - Update user
-//app.put('/api/users/:id', async (req, res) => {
-//    try {
-//        const { id } = req.params;
-//        const { name, last_name, role } = req.body;
-//        const result = await pool.query(
-//            'UPDATE users SET name = $1, last_name = $2, role = $3 WHERE id = $4 RETURNING *',
-//            [name, last_name, role, id]
-//        );
-//        if (result.rows.length === 0) {
-//            return res.status(404).json({ success: false, error: 'User not found' });
-//        }
-//        res.json({ success: true, data: result.rows[0] });
-//    } catch (error) {
-//        res.status(500).json({ success: false, error: error.message });
-//    }
-//});
+// UPDATE - Update user
+app.put('/updateuser/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, last_name, role } = req.body;
+        const result = await pool.query(
+            'UPDATE "Product" SET name = $1, description = $2, sku = $3 WHERE Id = $4 RETURNING *',
+            [name, last_name, role, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 //// DELETE - Delete user
 //app.delete('/api/users/:id', async (req, res) => {
