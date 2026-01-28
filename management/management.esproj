@@ -8,8 +8,4 @@
     <!-- Folder where production build objects will be placed -->
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
-  <ItemGroup>
-    <Folder Include="backend - Copy %283%29\" />
-    <Folder Include="backend - Copy\" />
-  </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ import logo from './logo.jpg'
 const CrystalCommunications = () => {
     const [users, setUsers] = useState([]);
     const [product, setProduct] = useState({ name: "", description:"",sku:"" });
-    const port = 5525;
+    const port = 5555;
 
     // handle submit data
     const handleSubmit = async () => {
@@ -26,10 +26,17 @@ const CrystalCommunications = () => {
         }
     }
 
+
+
+
+
+
+
+
     // Example with native fetch
     const fetchData = async () => {
         try {
-            const port = 5525;
+            const port = 5555;
             const response = await fetch("http://localhost:"+port+"/userr");
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -50,7 +57,7 @@ const CrystalCommunications = () => {
 
     return (
         <div class="main">
-        <img src={logo}/>
+        <img class="logo" src={logo}/>
             <h1 class="header">Crystal Comm. Stock Management System</h1>
             <h3>PRODUCTS</h3>
             <div class="add_new_prod_sec">
@@ -63,17 +70,17 @@ const CrystalCommunications = () => {
 
 
             <button onClick={fetchData}>All Products</button><br />
-            <table class="prod_table">
-            <thead>
-                    <tr> <th>ID</th> <th> PRODUCT NAME</th> <th>DESCRIPTION </th> <th>SKU</th> </tr></thead>
+            {/*<table class="prod_table">*/}
+            {/*<thead>*/}
+            {/*        <tr> <th>ID</th> <th> PRODUCT NAME</th> <th>DESCRIPTION </th> <th>SKU</th> </tr></thead>*/}
             
-                {users.map(w => (
-                 <tbody>
-                        <tr key={w.Id}> <td>{w.Id}</td> <td>{w.name}</td> <td>{w.description}</td>  <td>{w.sku}</td>  <button>EDIT</button></tr>
-                    </tbody>
+            {/*    {users.map(w => (*/}
+            {/*     <tbody>*/}
+            {/*            <tr key={w.Id}> <td>{w.Id}</td> <td>{w.name}</td> <td>{w.description}</td>  <td>{w.sku}</td>  <button>EDIT</button></tr>*/}
+            {/*        </tbody>*/}
 
-                ))}
-            </table>
+            {/*    ))}*/}
+            {/*</table>*/}
             
            
 

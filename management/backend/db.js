@@ -7,7 +7,7 @@ const { Pool } = pkg;
 
 
 const app = express();
-const port = 5525;
+const port = 5555;
 
 // Middleware
 app.use(cors());
@@ -39,7 +39,7 @@ pool.connect((err, client, release) => {
     if (err) {
         console.error('Error connecting to database:', err.stack);
     } else {
-        console.log('Connected to PostgreSQL database Test');
+        console.log('Connected to PostgreSQL database at:' + timeStamp());
         release();
     }
 });
@@ -70,7 +70,7 @@ app.get('/userr', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM "Product"');
 
-        console.log("Inside GET AT: " + timeStamp());
+        console.log("Inside GET 10:20 AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -92,37 +92,39 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-//// UPDATE - Update user
-//app.put('/api/users/:id', async (req, res) => {
-//    try {
-//        const { id } = req.params;
-//        const { name, last_name, role } = req.body;
-//        const result = await pool.query(
-//            'UPDATE users SET name = $1, last_name = $2, role = $3 WHERE id = $4 RETURNING *',
-//            [name, last_name, role, id]
-//        );
-//        if (result.rows.length === 0) {
-//            return res.status(404).json({ success: false, error: 'User not found' });
-//        }
-//        res.json({ success: true, data: result.rows[0] });
-//    } catch (error) {
-//        res.status(500).json({ success: false, error: error.message });
-//    }
-//});
+// UPDATE - Update user
+app.put('/updateuser/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, sku } = req.body;
+        const result = await pool.query(
+            'UPDATE "Product" SET name = $1, description = $2, sku = $3 WHERE "Id" = $4 RETURNING *',
+            [name, description, sku, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        console.log("Inside UPDATE, AT: " + timeStamp());
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
-//// DELETE - Delete user
-//app.delete('/api/users/:id', async (req, res) => {
-//    try {
-//        const { id } = req.params;
-//        const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
-//        if (result.rows.length === 0) {
-//            return res.status(404).json({ success: false, error: 'User not found' });
-//        }
-//        res.json({ success: true, message: 'User deleted', data: result.rows[0] });
-//    } catch (error) {
-//        res.status(500).json({ success: false, error: error.message });
-//    }
-//});
+// DELETE - Delete user
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query('DELETE FROM "Product" WHERE "Id" = $1 RETURNING *', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        console.log("Inside DELETE, AT: " + timeStamp());
+        res.json({ success: true, message: 'User deleted', data: result.rows[0] });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
