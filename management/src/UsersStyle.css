@@ -4,7 +4,7 @@
 }
 
 .logo {
-    margin-left: 500px;
+    margin-left: 400px;
 }
 
 .main {
@@ -21,6 +21,19 @@
     list-style-type: none;
 }
 
+
+.search_area {
+
+
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+.search_area span {
+    font-size: 20px;
+    margin-right: 10px;
+}
 .header {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     font-size: 44px;

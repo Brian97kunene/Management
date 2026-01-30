@@ -6,7 +6,7 @@ import logo from './logo.jpg'
 const CrystalCommunications = () => {
     const [users, setUsers] = useState([]);
     const [product, setProduct] = useState({ name: "", description:"",sku:"" });
-    const port = 5555;
+    const port = 5550;
 
     // handle submit data
     const handleSubmit = async () => {
@@ -36,15 +36,36 @@ const CrystalCommunications = () => {
     // Example with native fetch
     const fetchData = async () => {
         try {
-            const port = 5555;
-            const response = await fetch("http://localhost:"+port+"/userr");
+
+
+            const sku = document.getElementById("sku").value;
+
+            const tbl = document.getElementById("prod_table");
+            const port = 5552;
+            const response = await fetch("http://localhost:" + port + "/api/sku/" + sku);
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
-            setUsers(data.data);
-            console.log("Fetched data:", data.data);
+
+            while (tbl.rows.length > 1) { tbl.deleteRow(1); }
+            const row = tbl.insertRow();
             
+            row.insertCell().innerText = data.data.name;
+            row.insertCell().innerText = data.data.description;
+            row.insertCell().innerText = data.data.sku;
+            row.insertCell().innerText = data.data.price;
+            row.insertCell().innerText = data.data.delivery_cost;
+            row.insertCell().innerText = data.data.mark_up;
+            row.insertCell().innerText = data.data.vat;
+            row.insertCell().innerText = data.data.vendor;
+
+
+
+
+            
+            console.log("Fetched data:", data.data);
+
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -66,10 +87,15 @@ const CrystalCommunications = () => {
                 <input type="text" id="prod_sku" value={product.sku} placeholder="Product SKU" onChange={(e) => setProduct({ ...product, sku: e.target.value })}/>
                 <button onClick={handleSubmit}>ADD NEW PRODUCT</button><br />
             </div>
+            <div class="search_area">
+                <span>SEARCH:</span> 
+                <input type="text" id="sku" />
+                <button onClick={fetchData}>Go</button>
+
+            </div>
 
 
-
-            <button onClick={fetchData}>All Products</button><br />
+            {/*<button onClick={fetchData}>All Products</button><br />*/}
             {/*<table class="prod_table">*/}
             {/*<thead>*/}
             {/*        <tr> <th>ID</th> <th> PRODUCT NAME</th> <th>DESCRIPTION </th> <th>SKU</th> </tr></thead>*/}

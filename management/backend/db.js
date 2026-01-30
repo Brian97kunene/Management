@@ -7,7 +7,7 @@ const { Pool } = pkg;
 
 
 const app = express();
-const port = 5555;
+const port = 5552;
 
 // Middleware
 app.use(cors());
@@ -47,9 +47,9 @@ pool.connect((err, client, release) => {
 // CREATE - Add new user
 app.post('/createuser', async (req, res) => {
     try {
-        const { name, sku, description } = req.body;
+        const { name, sku, description,price,delivery,markUp,vat } = req.body;
         const result = await pool.query(
-            'INSERT INTO "Product" (name,sku,description)  VALUES ($1,$2,$3) RETURNING *', [name, sku, description]
+            'INSERT INTO "Product" (name,sku,description,price,delivery_cost,mark_up,vat)  VALUES ($1,$2,$3 $4,$5,$6,$7) RETURNING *', [name, sku, description, price, delivery, markUp, vat]
             
             
         );
@@ -92,27 +92,46 @@ app.get('/api/users/:id', async (req, res) => {
     }
 });
 
-// UPDATE - Update user
-app.put('/updateuser/:id', async (req, res) => {
+
+// READ - Get BY SKU
+app.get('/api/sku/:sku', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, description, sku } = req.body;
-        const result = await pool.query(
-            'UPDATE "Product" SET name = $1, description = $2, sku = $3 WHERE "Id" = $4 RETURNING *',
-            [name, description, sku, id]
-        );
+        const { sku } = req.params;
+        const result = await pool.query('SELECT * FROM "Product" WHERE sku = $1', [sku]);
+        console.log("Inside GET by SKU");
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        console.log("Inside UPDATE, AT: " + timeStamp());
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
+
+// UPDATE - Update user
+app.put('/updateuser/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, sku, retail_price, delivery_cost, mark_up, vat } = req.body;
+        const result = await pool.query(
+            'UPDATE "Product" SET name = $1, description = $2, sku = $3, price = $4, delivery_cost = $5 , mark_up = $6, vat = $7 WHERE "Id" = $8 RETURNING *',
+            [name, description, sku, retail_price, delivery_cost, mark_up, vat, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        console.log("Inside UPDATE, AT: " + timeStamp());
+        res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+        
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // DELETE - Delete user
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/deleteuser/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const result = await pool.query('DELETE FROM "Product" WHERE "Id" = $1 RETURNING *', [id]);

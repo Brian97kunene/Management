@@ -3,18 +3,20 @@ import './UsersStyle.css'
 
 // Component to edit a single user
 const UserEditor = ({ user, onClose, onUpdated }) => {
-    const [form, setForm] = useState({ name: user.name, description: user.description, sku: user.sku, mark_up: user.mark_up, retail_price: user.price });
-    const port = 5555;
+    const [form, setForm] = useState({ name: user.name, description: user.description, sku: user.sku, retail_price: user.price, delivery_cost: user.delivery_cost, mark_up:user.mark_up, vat: user.vat });
+    const port = 5552;
     const handleUpdate = async () => {
         try {
-            const port = 5525;
-            const response = await fetch(`http://localhost:5555/updateuser/${user.Id}`, {
+            //const port = 5557;
+            const response = await fetch(`http://localhost:${port}/updateuser/${user.Id}`, {
                 method: "PUT", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(form)
             });
+            console.log(form.data);
+            //console.log(form.data);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
@@ -34,8 +36,8 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
 // Component to delete a single record
     const handleDelete = async () => {
         try {
-            const port = 5555;
-            const response = await fetch(`http://localhost:5555/updateuser/${user.Id}`, {
+           // const port = 5555;
+            const response = await fetch(`http://localhost:` + {port} +`/deleteuser/${user.Id}`, {
                 method: "DELETE", // or "PATCH" if partial updates
                 headers: {
                     "Content-Type": "application/json"
@@ -84,10 +86,19 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
                 onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
             />
             <input
-                placeholder="Mark_Up"
+                placeholder="Mark Up"
                 value={form.mark_up}
                 onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
             />
+            <input
+                placeholder="Delivery Cost"
+                value={form.delivery_cost}
+                onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
+            />
+            <input
+                placeholder="Tax"
+                value={form.vat}
+                onChange={(e) => setForm({ ...form, vat: e.target.value })}/>
             <button onClick={handleUpdate}>Save</button>
             <button onClick={handleDelete}>Delete</button>
             <button onClick={onClose}>Cancel</button>
@@ -97,6 +108,8 @@ const UserEditor = ({ user, onClose, onUpdated }) => {
 
 // Main component showing list of users
 const UserList = () => {
+
+    const port = 5552;
     const [users, setUsers] = useState([]);
     const [editingUser, setEditingUser] = useState(null);
 
@@ -104,8 +117,8 @@ const UserList = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const port = 5525;
-                const response = await fetch("http://localhost:5555/userr");
+            
+                const response = await fetch("http://localhost:" + port + "/userr");
                 const data = await response.json();
                 setUsers(data.data);
             } catch (error) {
@@ -123,7 +136,6 @@ const UserList = () => {
 
     return (
         <div className="Products_List">
-            <h2>Products List</h2>
         { editingUser && (
             <UserEditor
                 user={editingUser}
@@ -132,7 +144,8 @@ const UserList = () => {
             />
         )};
 
-            <table className="prod_table">
+            <h2>Products List</h2>
+            <table className="prod_table" Id="prod_table">
                 <thead>
                     <tr>
                         
@@ -175,3 +188,8 @@ const UserList = () => {
     );
 }
 export default UserList;
+
+
+
+
+
