@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Prods from './productsTable.jsx'
+import Vend from './vendors.jsx'
 import MyClass from './MyMethods.js'
 import CreateSupplier from "./createSupplier.jsx";
 import Upload from './ReadAFile.jsx'
@@ -8,20 +9,26 @@ import Manual_inputs from './Manual_inputs.jsx'
 import Livefeed_Updates from './Livefeed_Updates.jsx'
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import axios from "axios";
+
 
 const Suppliers = () => {
 
-    const port = 5552;
+    const port = 5000;
     const [suppliers,setSuppliers] = useState([])
     const [activeSupplierId, setActiveSupplierId] = useState(null);
     const [showTbl, setshowTbl] = useState(false)
+    const [showSupTbl, setshowSupTbl] = useState(false)
     const [upload, setupload] = useState(false)
     const [manualupload, setmanualupload] = useState(false)
     const [edit, setedit] = useState(false)
     const [updates, setupdates] = useState(true)
-    const [editsuppliers, seteditsuppliers] = useState(false)
+    const [editsuppliers, seteditsuppliers] = useState(null)
     const [supps, setsupps] = useState([]);
-
+    const [SupplierModal, setSupplierModal] = useState({
+        
+        sup: suppliers,
+        open:false  })
 
     // for refreshes
     // for refreshes
@@ -40,25 +47,22 @@ const Suppliers = () => {
                 setLoading(true);
                 setProgress(0);
 
-                // Simulate progress increments while fetching
-                const interval = setInterval(() => {
-                    setProgress((prev) => (prev <= 75 ? prev + 10 : prev));
-                }, 100);
-                // for sync testing
 
 
-                const response = await fetch(`http://localhost:${port}/vendors`);
+
+
+                const response = await fetch(`http://localhost:${port}/api/products/getAllsuppliers`);
                 const data = await response.json();
+                setSuppliers(data)
 
-                setSuppliers(data.data)
-                console.log(data.data)
+                console.log(data)
             } catch (error) {
                 console.error("Error fetching last update:", error);
             
         } finally {
 
 
-
+              
             setLoading(false);
             setProgress(0); // reset after short delay
 
@@ -71,14 +75,14 @@ const Suppliers = () => {
     useEffect(() => {
         const fetchL = async () => {
             try {
-               
-                console.log(supps," useEffect!!!")
+
+                console.log(editsuppliers, " useEffect!!!")
             } catch (error) {
                 console.error( error);
             }
         };
         fetchL();
-    }, [supps]);
+    }, [editsuppliers]);
 
 
 
@@ -112,11 +116,30 @@ const Suppliers = () => {
  * Converts an integer from 0 to 100 into its English word equivalent
  * with the first letter capitalized.
  */
-    function editSupplier(supp) {
+    function viewsupplier(supp) {
 
-        seteditsuppliers(supp);
-        setedit(!edit)
+        seteditsuppliers(null)
+        suppliers.filter(s => supp.id === s.id).map(i => {
 
+
+
+            console.log(i)
+
+            setSupplierModal({sup:i,open:true})
+
+        });
+        setshowTbl(!showTbl)
+        seteditsuppliers(supp)
+        console.log(SupplierModal);
+    }
+
+
+
+
+    const openAccordioon = async (supplier) => {
+   
+
+ 
     }
     function numberToWords(num) {
         let result = "";
@@ -224,7 +247,7 @@ const Suppliers = () => {
 
         console.log(supps);
 
-        const response = await fetch(`http://localhost:${port}/deletevendor`, {
+        const response = await fetch(`http://localhost:${port}/deletesupplier`, {
             method: "DELETE", // or "PATCH" if partial updates
             headers: {
                 "Content-Type": "application/json"
@@ -289,138 +312,15 @@ const Suppliers = () => {
             }
                 <button style={{ display:"sticky" , position:"static" }} onClick={() => setrefresh(prev => !prev)}></button>
 
-            <ol>
-                    <div class="accordion" id="accordionUpdates">
-                        { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
-                        { /*NEW PRODUCTS ACCORDION FEEDBACK*/}
-                        { /*id="headingOne"*/}
-
-                        <div class="accordion-item">
-                        {suppliers.map((supplier, indx) => 
-                    <li key={supplier.id}>
-                                <input type="checkbox" style={{width:"15px"}} onChange={() => mark(supplier)}></input>
-
-                    
-                  
-
-                            <h2 class="accordion-header" id={"heading" + numberToWords(supplier.id)}>
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target={"#collapse" + numberToWords(supplier.id)} aria-expanded="true" aria-controls="collapseOne">
-
-                            <div class="" role="alert">
-                                
-                                <h1>{supplier.name}</h1>
+          
 
 
-                               
-                                    </div>
-                            
+            <button onClick={() => setshowSupTbl(!showSupTbl)}> Supplier
+                </button>
+            {showSupTbl &&
 
-                                </button>
-                            </h2>
-                            <div id={"collapse" + numberToWords(supplier.id)} class="accordion-collapse collapse " aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-
-                           
-
-                                    <div class="" role="alert">
-                                    
-                                 
-                                        <h4>Email: {supplier.email}</h4>
-                                        <h4>Contact: {supplier.contact}</h4>
-                                        <h4>Business Address: {supplier.address}</h4>
-                                        <h4>Data Format: {supplier.data_format}</h4>
-                                            <h4>Last Update: {MyClass.formatDate(supplier.created_at)}</h4>
-                                {edit && <div>
-                                    <br />
-
-
-                                    <EditSupp supplier={editsuppliers} />
-                                </div>
-                                }
-                                <h4>{supplier.contact_person}</h4>
-                                <button onClick={() => setshowTbl(!showTbl)}>View Products</button>
-
-                                            {(supplier.data_format === "XML" || supplier.data_format === "CSV" )&&
-                                <button onClick={() => setupload(!upload)}>Update Products</button>
-
-                                }
-                                {supplier.data_format === "Manual" &&
-                                <button onClick={() => setmanualupload(!manualupload)}>Update Products</button>
-
-                                }
-                                {supplier.data_format === "Live Feed" &&
-                                    <button onClick={() => setupdates(!updates)}>Check for Updates</button>
-
-                                }
-
-
-                                <button onClick={() => editSupplier(supplier)}>Update Details</button>
-
-                                <div style={{ display: "flex", justifyContent: "right" }} >
-
-                                                {upload && (supplier.data_format === "XML" || supplier.data_format === "CSV") && (<div>
-                                    <br/>
-
-
-                                        <Upload supplier={supplier} />
-                                        </div>)
-                                    }
-                                    {manualupload && supplier.data_format === "Manual" && (<div>
-                                    <br/>
-
-
-                                                    <Manual_inputs supplier={ supplier} />
-                                        </div>)
-                                    }
-                                    
-                                        </div>
-
-
-                                {updates &&
-                                    <div>
-                                        <Livefeed_Updates supplier={supplier} update={updates} setupd={() => setupdates(!updates)} />
-                                    </div>
-
-                                }
-
-
-                                {showTbl && <>
-
-                                    
-                                {
-                                    supplier && <>
-                                            <Prods val={showTbl} close={() => { setshowTbl(!showTbl) }} supplier={supplier} /> 
-                                         
-                                    </>
-                                }
-                                </>
-
-
-                                }
-
-                               
-                            </div>
-
-
-
-                                </div>
-                            </div>
-                    </li>
-            
-            )}
-                        </div>
-
-
-
-
-
-                        </div>
-                </ol>
-
-
-
-     
-
+                <Vend supplier={suppliers} />
+            }
 
 
 

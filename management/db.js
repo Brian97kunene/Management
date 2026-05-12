@@ -32,7 +32,7 @@ const pool = new Pool({
     port: 5432,
     database: 'postgres',
     user: 'postgres',
-    password: "1234"
+    password: "GodMode"
 });
 
 
@@ -63,7 +63,7 @@ const BuildQuery = (dat, data) => {
     else if (dat == "update") {
 
 
-        query1 = `UPDATE vendor SET name = 'MTBTTF' where name='${JSON.stringify(data)}' RETURNING *;`;
+        query1 = `UPDATE supplier SET name = 'MTBTTF' where name='${JSON.stringify(data)}' RETURNING *;`;
     }
     return query1;
 
@@ -176,7 +176,7 @@ app.post('/api/getmarkups', async (req, res) => {
         console.log(supplier_code.code, " code");
         await client.query(
             `UPDATE product
-SET price_after_mark_up = (delivery_cost + price) * ((1 + (mark_up / 100.0)) * (1 + (vat / 100.0)))
+SET price_after_mark_up = (bank_cost + price) * ((1 + (mark_up / 100.0)) * (1 + (vat / 100.0)))
 WHERE supplier_code = $1 RETURNING *; `
             , [supplier_code.code]);
 
@@ -199,9 +199,9 @@ WHERE supplier_code = $1 RETURNING *; `
 // CREATE - Add new user
 app.post('/createuser', async (req, res) => {
     try {
-        const { name, sku, description, price, delivery_cost, mark_up, vat,vendor,quantity,category } = req.body;
+        const { name, sku, description, price, bank_cost, mark_up, vat,supplier,quantity,category } = req.body;
         const result = await pool.query(
-            'INSERT INTO product (name,sku,description,price,delivery_cost,mark_up,vat,vendor,quantity,category)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [name, sku, description, price, delivery_cost, mark_up, vat, vendor, quantity, category]
+            'INSERT INTO product (name,sku,description,price,bank_cost,mark_up,vat,supplier,quantity,category)  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *', [name, sku, description, price, bank_cost, mark_up, vat, supplier, quantity, category]
             
             
         );
@@ -229,7 +229,7 @@ app.post('/api/createproduct', async (req, res) => {
         console.log(req.body.supplier.id);
        // const count = req.body.rating?.count;
         const result = await pool.query(
-            "INSERT INTO product(sku,name,description,price,quantity,mark_up,supplier_code,vendor,created_on,updated_on) VALUES($1, $2, $3, $4,$5,$6,$7,$8, NOW(), NOW()) RETURNING * "
+            "INSERT INTO product(sku,name,description,price,quantity,mark_up,supplier_code,supplier,created_on,updated_on) VALUES($1, $2, $3, $4,$5,$6,$7,$8, NOW(), NOW()) RETURNING * "
             ,
             [
                 row.sku,
@@ -297,7 +297,7 @@ where is_synced = true; `
         res.status(500).json({ success: false, error: error.message });
     }
 });
-app.get('/api/getothersuppliers/:sku', async (req, res) => {
+app.get('/api/getothersuppliers', async (req, res) => {
 
     const { sku } = req.params;
     console.log(sku);
@@ -305,11 +305,11 @@ app.get('/api/getothersuppliers/:sku', async (req, res) => {
      
        // const count = req.body.rating?.count;
         const result = await pool.query(
-            `SELECT vendor.id as "supplier_id" ,product.name,vendor.name as "supplier", price, quantity
+            `SELECT sku, supplier.id as "supplier_id" ,product.name,supplier.name as "supplier", price, quantity
 	FROM public.product
-	join vendor on product.supplier_code = vendor.id
+	join supplier on product.supplier_code = supplier.id
 
-	where sku = $1` ,[sku]
+	` 
 
 
         );
@@ -437,7 +437,36 @@ app.get('/getproduct/bysku/:x', async (req, res) => {
         var { x} = req.params;
        console.log(x)
 
-        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", ["%" + x+"%"]);
+        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", [x+"%"]);
+
+        console.log("Inside GET 'getproduct' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.log(x+"    ");
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+// READ - Get all users
+app.get('/api/precise/getproduct/byname/:x', async (req, res) => {
+    try {
+        var { x} = req.params;
+        const result = await pool.query("SELECT * FROM product where name ilike  $1 ", [x]);
+
+        console.log("Inside GET 'getproduct' AT: " + timeStamp());
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.log(x+"    ");
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// READ - Get all users
+app.get('/api/precise/getproduct/bysku/:x', async (req, res) => {
+    try {
+        var { x} = req.params;
+       console.log(x)
+
+        const result = await pool.query("SELECT * FROM product where sku ilike  $1 ", [x]);
 
         console.log("Inside GET 'getproduct' AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
@@ -466,7 +495,7 @@ LEFT JOIN (
 
     GROUP BY sku
 ) dup ON p.sku = dup.sku
-where supplier_code = $1 limit 20 offset $2`, [x, y]);
+where supplier_code = $1 limit $2`, [x,y]);
 
         console.log("Inside GET 'getproduct' by supplier_code AT: " + timeStamp());
         res.json({ success: true, data: result.rows });
@@ -499,9 +528,7 @@ app.get('/api/getproducts/bysuppliercode/:id', async (req, res) => {
         const result = await pool.query('SELECT * FROM product WHERE supplier_code = $1 ', [id]);
         console.log("Supplier ", id);
         console.log("products ", result.rows.length);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
+      
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -527,24 +554,24 @@ app.get('/api/sku/:sku', async (req, res) => {
 
 
 // UPDATE - Update user
-app.post('/updateproducts/:sku', async (req, res) => {
+app.post('/api/updateproduct', async (req, res) => {
     try {
-       
-        const rows = req.body.rows;
-        const sku = req.params;
+        console.log([req.body])
+        const rows = [req.body];
+        
+        console.log(rows)
+        
+        const updatePromises = rows.map(row => {
+            return pool.query(
+                'UPDATE product SET quantity = $1 ,updated_on = now() WHERE sku = $2 and supplier = $3 RETURNING *',
+                [row.quantity, row.sku, row.supplier]
+            );
+        });
 
-
-
-        const result = await pool.query(
-            'UPDATE product SET  $2 ,updated_on = now() WHERE sku = $1 RETURNING *',
-            [sku, rows]
-        );
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'User not found' });
-        }
+        await Promise.all(updatePromises);  
 
         console.log("Inside UPDATE, AT: "+ timeStamp());
-        res.json({ success: true, data: result.rows[0] });
+        res.json({ success: true, data: res });
     } catch (error) {
         
         res.status(500).json({ success: false, error: error.message });
@@ -658,7 +685,7 @@ app.post('/api/bulk-insert', async (req, res) => {
 
             const result = await pool.query(
                 `INSERT INTO product (
-            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
+            name, detailed_description, sku, price, bank_cost, mark_up, quantity, category, supplier, updated_on, created_on, vat, description,supplier_code
          )
          VALUES (
             $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8        
@@ -673,7 +700,7 @@ app.post('/api/bulk-insert', async (req, res) => {
                     rows[row].description,
                     rows[row].sku,
                     rows[row].price,
-                    rows[row].delivery_cost,
+                    rows[row].bank_cost,
                     rows[row].mark_up,
                     rows[row].quantity, // 7
                   
@@ -703,9 +730,7 @@ app.post('/api/bulk-insert', async (req, res) => {
 );
 
 
-///                         SYNTECH BULK OPERATIONS
-///                         SYNTECH BULK OPERATIONS
-/// 
+///                          BULK OPERATIONS
 
 
 app.post('/api/bulk-update', async (req, res) => {
@@ -713,9 +738,8 @@ app.post('/api/bulk-update', async (req, res) => {
         const { rows, supplier } = req.body;
         //const supp_code_id = supply.id;
 
-        // console.log(`Starting bulk update for supplier: ${JSON.stringify(supp_code_id)}`);
-        console.log(rows);
-        console.log(req.body);
+     console.log(`Starting bulk update for supplier: ${rows[0]}`);
+  
          //We use a map to create an array of promises
         const updatePromises = rows.map(row => {
             return pool.query(
@@ -724,39 +748,37 @@ app.post('/api/bulk-update', async (req, res) => {
     SET
         price = $4,
         quantity = $7,
-        delivery_cost = $5,
+        bank_cost = $5,
         mark_up = $6,
-        -- Cast the unknown parameters to numeric to resolve the operator ambiguity
         price_after_mark_up = ($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)),
         updated_on = NOW()
-    WHERE sku = $3 AND supplier_code = $8
+    WHERE sku = $3 AND supplier_code = $9
     RETURNING *
 )
 INSERT INTO product (
-    name, detailed_description, sku, price, delivery_cost,
-    mark_up, quantity, category,vendor, updated_on, created_on,
-    vat, description, supplier_code, price_after_mark_up
+    name, detailed_description, sku, price, bank_cost,
+    mark_up, quantity, category, supplier, updated_on, created_on,
+    vat, description, supplier_code,
+    price_after_mark_up
 )
 SELECT
-    $1, $2, $3, $4, $5, $6, $7, '', NOW(), NOW(), 15, '', $8,
+    $1, $2, $3, $4, $5,
+    $6, $7, $8, $10, NOW(), NOW(),
+    15, '', $9,
     (($4::NUMERIC + $5::NUMERIC) * (1 + ($6::NUMERIC / 100.0) + (15 / 100.0)))
 WHERE NOT EXISTS (SELECT 1 FROM updated)
-
-
 RETURNING *;`,
                 [
-                    row.name || 'PRODUCT_ || id',
-                    row.description || '',
-                    row.sku,
-                    row.price || 0,
-                    row.delivery_cost || 0,
-                    row.mark_up || 0,
-                    row.quantity || 0,
-                    row.category || 'Uncategorized',
-                    row.vendor || 'No Supplier',
-                    supplier.id,
-                    supplier.name
-                  
+                    row.name || 'PRODUCT_' + row.sku, // $1
+                    row.description || '',            // $2
+                    row.sku || "SKU_"+ Math.floor(Math.random()*100),                          // $3
+                    row.price || 0,                   // $4
+                    row.bank_cost || 50,            // $5
+                    row.mark_up || 0,                  // $6
+                    row.quantity || 0,                 // $7
+                    row.category || 'Uncategorized',   // $8
+                    supplier.id,                       // $9
+                    supplier.name                      // $10
                 ]
             );
         });
@@ -768,6 +790,7 @@ RETURNING *;`,
 
     } catch (error) {
         console.error("Bulk update error:", error);
+       
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -993,21 +1016,21 @@ app.post('/api/syntech/bulk-insert', async (req, res) => {
                 //console.log(row);
                 const result = await pool.query(
                     `INSERT INTO product (
-            name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description, livefee_updated_on,supplier_code
+            name, detailed_description, sku, price, bank_cost, mark_up, quantity, category, supplier, updated_on, created_on, vat, description,supplier_code
          )
          VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), 15.00, $11, $10,$12
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), 15.00, $11, $12
          )RETURNING*;`,
                     [
                         row.name,         //1
                         row.description, //2  // detailed_description
                         row.sku,            //3
                         row.price,          //4
-                        row.delivery_cost,  //5
+                        row.bank_cost,  //5
                         row.recommended_margin, //6 // mark_up
                         qty, //7 quantity
                         row.categorytree,                           //8 category
-                        row.attributes?.brand || 'Unknown Vendor',                   //9 vendor
+                        row.attributes?.brand || 'Unknown supplier',                   //9 supplier
                         row.last_modified,                       //10 livefee_updated_on
                         row.shortdesc,
                         supp.id                    ]
@@ -1150,7 +1173,7 @@ app.post('/api/bulk-upsert', async (req, res) => {
 
         //    const result = await pool.query(
         //        `INSERT INTO product (
-        //    name, detailed_description, sku, price, delivery_cost, mark_up, quantity, category, vendor, updated_on, created_on, vat, description,supplier_code
+        //    name, detailed_description, sku, price, bank_cost, mark_up, quantity, category, supplier, updated_on, created_on, vat, description,supplier_code
         // )
         // VALUES (
         //    $1, $2, $3, $4, $5, $6, $7, '', '',NOW(),NOW(),15,'', $8
@@ -1165,7 +1188,7 @@ app.post('/api/bulk-upsert', async (req, res) => {
         //            rows[row].description,
         //            rows[row].sku,
         //            rows[row].price,
-        //            rows[row].delivery_cost,
+        //            rows[row].bank_cost,
         //            rows[row].mark_up,
         //            rows[row].quantity, // 7
 
@@ -1243,18 +1266,18 @@ app.post('/rollback/:transactionId', async (req, res) => {
  
 
 
-///                         VENDOR ROUTES BELOW
-///                         VENDOR ROUTES BELOW
-///                         VENDOR ROUTES BELOW
+///                         supplier ROUTES BELOW
+///                         supplier ROUTES BELOW
+///                         supplier ROUTES BELOW
 
 
 
-// READ - Get all vendors
-app.get('/vendors', async (req, res) => {
+// READ - Get all suppliers
+app.get('/suppliers', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM vendor');
+        const result = await pool.query('SELECT * FROM supplier');
 
-        console.log("Inside GET all vendors : " + timeStamp());
+        console.log("Inside GET all suppliers : " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1263,22 +1286,22 @@ app.get('/vendors', async (req, res) => {
 
 
 
-// READ - Get a vendor
-app.get('/vendor/:id', async (req, res) => {
+// READ - Get a supplier
+app.get('/supplier/:id', async (req, res) => {
 
     const id = req.params;
 
     try {
-        const result = await pool.query('SELECT * FROM vendor where id = $1',[id]);
+        const result = await pool.query('SELECT * FROM supplier where id = $1',[id]);
 
-        console.log("Inside GET a vendor : " + timeStamp());
+        console.log("Inside GET a supplier : " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 })
-// READ - Get a vendor by name
-app.get('/vendor/byname/:name', async (req, res) => {
+// READ - Get a supplier by name
+app.get('/supplier/byname/:name', async (req, res) => {
 
     const name = req.params.name;
     var t = "";
@@ -1308,11 +1331,11 @@ app.get('/vendor/byname/:name', async (req, res) => {
     
     console.log("**");
     try {
-        const result = await pool.query('SELECT * FROM vendor where name ilike $1', [t]);
+        const result = await pool.query('SELECT * FROM supplier where name ilike $1', [t]);
 
         console.log("Inside : " + name);
         console.log("res: " + result);
-        console.log("Inside GET a vendor by name : " + timeStamp());
+        console.log("Inside GET a supplier by name : " + timeStamp());
         res.json({ success: true, data: result.rows });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1321,21 +1344,22 @@ app.get('/vendor/byname/:name', async (req, res) => {
 
 
 
-// CREATE - Add new VENDOR
-app.post('/createvendor', async (req, res) => {
+// CREATE - Add new supplier
+app.post('/createsupplier', async (req, res) => {
     try {
         const { name, phone, contact_name, email, address } = req.body.fom;
         const  data_format  = req.body.dataformat;
 
-        
+        console.log(data_format);
+         
         const result = await pool.query(
-            'INSERT INTO vendor (name,contact,contact_name,email,address,data_format,created_at)  VALUES ($1,$2,$3,$4,$5,$6,now()) RETURNING *', [name, phone, contact_name, email, address,data_format]
+            'INSERT INTO supplier (name,contact,contact_name,email,address,data_format,created_at,updated_at)  VALUES ($1,$2,$3,$4,$5,$6,now(),now()) RETURNING *', [name, phone, contact_name, email, address,data_format]
 
 
         );
 
 
-        console.log("Inside CREATE vendor AT: " + timeStamp());
+        console.log("Inside CREATE supplier AT: " + timeStamp());
 
 
         res.status(201).json({ success: true, data: result.rows[0]  });
@@ -1379,21 +1403,21 @@ app.post("/api/update-csv", async (req, res) => {
 
 
 
-// UPDATE - Update vendor
-app.post('/updatevendor', async (req, res) => {
+// UPDATE - Update supplier
+app.post('/updatesupplier', async (req, res) => {
     try {
         
         const { name, contact, contact_name, email, address, id, data_format } = req.body;
 
         const result = await pool.query(
-            'UPDATE vendor SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7  WHERE id = $6 RETURNING *',
+            'UPDATE supplier SET name = $1, contact = $2, contact_name = $3, email = $4, address = $5,data_format = $7  WHERE id = $6 RETURNING *',
             [name, contact, contact_name, email, address, id,data_format]
         );
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        console.log("Inside vendor UPDATE, AT: " + timeStamp());
+        console.log("Inside supplier UPDATE, AT: " + timeStamp());
         res.json({ success: true, data: result.rows[0] });
     } catch (error) {
         console.log(req.body);
@@ -1403,7 +1427,7 @@ app.post('/updatevendor', async (req, res) => {
 
 
 
-app.delete('/deletevendor', async (req, res) => {
+app.delete('/deletesupplier', async (req, res) => {
     try {
 
         const  rows  = req.body.rows;
@@ -1413,12 +1437,12 @@ app.delete('/deletevendor', async (req, res) => {
        console.log(BuildQuery("insert",rows));
         for (const row of rows) {
             const result = await pool.query(
-                'DELETE FROM vendor WHERE name = $1 AND id = $2  RETURNING *',
+                'DELETE FROM supplier WHERE name = $1 AND id = $2  RETURNING *',
                 [row.name, row.id]
             );
         }
 
-        console.log("Inside vendor DELETE, AT: " + timeStamp());
+        console.log("Inside supplier DELETE, AT: " + timeStamp());
         res.json({ success: true  });
     } catch (error) {
         
@@ -1429,7 +1453,7 @@ app.delete('/deletevendor', async (req, res) => {
 
 // fetch columns for comparision
 app.get("/api/db-columns", async (req, res) => {
-    const columns = ["price", "name", "sku", "description", "delivery_cost", "category", "mark_up","quantity","vendor","vat"]; // Example: fetch from DB schema
+    const columns = ["price", "name", "sku", "description", "brand", "category", "mark_up","quantity"]; // Example: fetch from DB schema
     res.json({ success: true, columns });
 });
 

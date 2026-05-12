@@ -9,7 +9,7 @@ import { Button } from "bootstrap";
 
 const ManualList = ({ supplier}) => {
     const [products, setproducts] = useState([])
-    const [product, setproduct] = useState({})
+    const [product, setproduct] = useState([])
 
 
 
@@ -17,9 +17,11 @@ const ManualList = ({ supplier}) => {
     useEffect(() => {
 
         const getEm = async () => {
+            let prods = await MyClass.getProduct();
+            if (prods) {
 
-
-            setproducts(await MyClass.getProduct());
+            setproducts(prods);
+            }
 
         }
         getEm();
@@ -64,7 +66,7 @@ const ManualList = ({ supplier}) => {
         setproduct({ ...product, [col]: val });
     };
 
-    const columnsToExclude = ["id", "detailed_description", "updated_on", "livefee_updated_on", "data_source", "supplier_code", "created_on", "vat", "vendor", "category", "delivery_cost", "price_after_mark_up","is_synced"];
+    const columnsToExclude = ["id", "detailed_description", "updated_on", "data_source", "supplier_code", "created_on", "vat", "category", "delivery_cost", "price_after_mark_up","is_synced"];
 
     return (
         <div>

@@ -44,12 +44,12 @@ const UserEditor = ({ user }) => {
             });
             console.log("Updated: " + form.sku);
             //console.log(form.data);
-            
+
             if (!response.ok) {
                 console.log(`HTTP error! Status: ${response.statusText}`);
             }
 
-       
+
 
         } catch (error) {
 
@@ -78,7 +78,7 @@ const UserEditor = ({ user }) => {
             console.log("Delete Complete:", updatedUser.data);
             alert(`Delete Complete: ${form.sku}`);
 
-        
+
         } catch (error) {
             console.error("Delete Error", error);
         }
@@ -89,7 +89,7 @@ const UserEditor = ({ user }) => {
 
 
         <div style={{ width: "100%" }}>
-            <h4 >Edit Product: <br/> {form.name}</h4>
+            <h4 >Edit Product: <br /> {form.name}</h4>
             {/*  // Form to edit product details*/}
             {/*  // Form to edit product details*/}
             {/*  // Form to edit product details*/}
@@ -97,64 +97,64 @@ const UserEditor = ({ user }) => {
             {/*  // Form to edit product details*/}
 
             <h5>Name</h5>
-                            <input
-                                value={form.name}
-                                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            />
-           <br/>
+            <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <br />
             <h5>Description</h5>
-                        
 
-                            <input
-                                value={form.description}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            />
-           <br/>
+
+            <input
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+            <br />
             <h5>SKU</h5>
-                        
-   
-                            <input
-                                value={form.sku}
-                                onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                            />
-           <br/>
-                        
+
+
+            <input
+                value={form.sku}
+                onChange={(e) => setForm({ ...form, sku: e.target.value })}
+            />
+            <br />
+
             <h5>Retail Price</h5>
- 
-                            <input
-                                value={form.retail_price}
-                                onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
-                            />
-           <br/>
+
+            <input
+                value={form.retail_price}
+                onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
+            />
+            <br />
             <h5>Mark Up</h5>
-                        
 
-                            <input
-                                value={form.mark_up}
-                                onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
-                            />
-           <br/>
+
+            <input
+                value={form.mark_up}
+                onChange={(e) => setForm({ ...form, mark_up: e.target.value })}
+            />
+            <br />
             <h5> Delivery Cost</h5>
-                       
 
-                            <input
-                                value={form.delivery_cost}
-                                onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
-                            />
-           <br/>
+
+            <input
+                value={form.delivery_cost}
+                onChange={(e) => setForm({ ...form, delivery_cost: e.target.value })}
+            />
+            <br />
 
             <h5> Quantity</h5>
-                        
 
 
 
-                            <input
-                                value={form.quantity}
-                                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                            />
+
+            <input
+                value={form.quantity}
+                onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+            />
             <h5> Brand</h5>
-                        
-           <br/>
+
+            <br />
 
 
 
@@ -163,20 +163,20 @@ const UserEditor = ({ user }) => {
 
 
 
-                            <select
-                                value={form.vendor}
-                                onChange={(e) => setForm({ ...form, vendor: e.target.value })}
-                            >Vendor
-                                <option value="">Select Vendor</option>
-                                {vendors.map(v => (
-                                    <option class="dropdown-item" key={v.id} value={v.name}>{v.name}</option>
-                                ))}
-                            </select>
+            <select
+                value={form.vendor}
+                onChange={(e) => setForm({ ...form, vendor: e.target.value })}
+            >Vendor
+                <option value="">Select Vendor</option>
+                {vendors.map(v => (
+                    <option class="dropdown-item" key={v.id} value={v.name}>{v.name}</option>
+                ))}
+            </select>
 
             <div className="actions">
                 <button onClick={handleUpdate}>Save</button>
                 <button onClick={handleDelete}>Delete</button>
-               
+
             </div>
 
         </div>
@@ -191,16 +191,16 @@ const UserEditor = ({ user }) => {
 
 
 
-const PopupExample = ({product,val,close }) => {
+const EdtProduct = ({ product, val, close }) => {
 
-   ;
+    
 
 
-   
+
     return (
         <div>
             {/* Button to open popup */}
-            
+
 
             {/* Popup */}
             {val && (
@@ -208,16 +208,16 @@ const PopupExample = ({product,val,close }) => {
                     <div style={styles.popup}>
 
 
-                      
+
 
                         {product && (
                             <UserEditor
                                 user={product}
-                               
-                                
+
+
                             />
-                        )} 
-                           
+                        )}
+
 
                         <button onClick={close}>Close</button>
                     </div>
@@ -231,20 +231,17 @@ const PopupExample = ({product,val,close }) => {
 const styles = {
     overlay: {
         position: "fixed",
-        top: "25%",
-        bottom: "25%",
-        border: "1px solid black", 
+        top: 0, left: 0, right: 0, bottom: 0,
         backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex", justifyContent: "center", alignItems: "center"
+        display: "flex", justifyContent: "center", alignItems: "left"
     },
     popup: {
         backgroundColor: "white",
-        padding: "10px",
+        padding: "20px",
         borderRadius: "16px",
-        minWidth: "200px",
+        minWidth: "300px",
         textAlign: "center"
     }
 };
 
-export default PopupExample;
-    
+export default EdtProduct;

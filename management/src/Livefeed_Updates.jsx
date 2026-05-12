@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import FeedbackSection from "./FeedBack_Section.jsx";
 import MyClass from "./MyMethods.js";
 import feed from "./syntech-feed";
-function Livefeed_Updates({ supplier,setupd,update}) {
+function Livefeed_Updates({ supplier, setupd, update }) {
     const port = 5552;
     //const [users, setUsers] = useState([]);
 
@@ -46,7 +46,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
         try {
 
             var livefeed_response = await fetch("http://localhost:5555/api/syntech-feed");
-           const livefeed_data = await livefeed_response.json();
+            const livefeed_data = await livefeed_response.json();
             setlivefeed_products(livefeed_data.products);
 
 
@@ -55,22 +55,27 @@ function Livefeed_Updates({ supplier,setupd,update}) {
             const response = await fetch(`http://localhost:${port}/api/getproducts/bysuppliercode/${supplier.id}`);
             const data = await response.json();
 
+            console.log(supplier);
+            console.log(data);
 
             setproducts(data.data);
             // setupdates(!updates);
-           setlivefeed_products(feed.products);
-          //  console.log(data.data.length);
+            if (!livefeed_response) {
+
+                setlivefeed_products(feed.products);
+            }
+            //  console.log(data.data.length);
             //console.log(feed.products.length);
             //setproducts(data.data );
 
 
 
-            checkUpdates(data.data, livefeed_data.products);
-           //checkUpdates(data.data, feed.products);
+            console.log(checkUpdates(data.data, livefeed_data.products));
+            //checkUpdates(data.data, feed.products);
 
 
 
-          
+
         } catch (error) {
             console.error("Error fetching users:", error);
 
@@ -79,9 +84,71 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
 
 
+    const sendToMongo = async (products) => {
+        const liveMap = new Map();
 
+        console.log("Products count:", products?.length);
+
+        // 1. Populate the Map with the added supplier field
+        products.forEach(f => {
+            liveMap.set(String(f.sku), { ...f, metadata: {SupplierName: supplier.name,data_format:supplier.data_format } });
+        });
+
+
+        // Inside Livefeed_Updates.jsx before calling fetch/axios
+        const formattedData = products.map(item => ({
+            ...item,
+            // Convert metadata array [ {obj} ] to just {obj}
+            metadata: { SupplierName: supplier.name, data_format: supplier.data_format },
+
+            // Convert attributes object {brand: 'Intel'} to array [{key: 'brand', value: 'Intel'}]
+            attributes: item.attributes && !Array.isArray(item.attributes)
+                ? Object.entries(item.attributes).map(([key, value]) => ({ key, value }))
+                : item.attributes
+        }));
+
+        // Now send 'formattedData' instead of 'products'
+        console.log(formattedData);
+
+        // 2. Convert that Map back into an Array so JSON can handle it
+        const productsWithSupplier = Array.from(liveMap.values());
+
+        console.log("Data to be sent:", productsWithSupplier);
+
+
+
+
+
+
+        if (formattedData.length !== 0) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/createproducts`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    // 3. Send the UPDATED array, not the original 'products'
+                    body: JSON.stringify({
+                        productss: formattedData
+                    })
+                });
+
+                const result = response.status;
+                console.log("Server Response:", result);
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
+        }
+    };
     const checkUpdates = (dbproducts,livefeedproducts) => {
-
+        const results = {
+            matched: [],
+            qtyMismatched: [],
+            priceMismatched: [],
+            newProducts: [],
+            deletedProducts: [] // Products in DB but NOT in Feed
+        };
 
         setLoading(true);
         setProgress(0);
@@ -95,14 +162,37 @@ function Livefeed_Updates({ supplier,setupd,update}) {
 
         console.log(dbproducts);
         console.log(livefeedproducts);
-        if (!Array.isArray(dbproducts) || !Array.isArray(livefeedproducts)) {
+        if (livefeedproducts) {
             console.error("Invalid product data", { livefeedproducts, dbproducts });
-            return "Invalid product data";
+
+
+            if (dbproducts.length !==0) {
+
+                console.log("What is happening?");
+
+            } else {
+
+
+                livefeedproducts.map(i => results.newProducts.push(i));
+                console.log(results);
+                setupdatedProds(results);
+
+
+
+
+
+                const interval = setInterval(() => {
+                    setProgress((prev) => (prev <= 100 ? prev + 10 : prev));
+                }, 100);
+
+                setupdatedProds(results)
+               return
+            }
         }
 
 
         console.log(Object.keys(livefeedproducts[0]).join(","));
-        console.log(Object.keys(dbproducts[0]).join(","));
+      ///  console.log(Object.keys(dbproducts[0]).join(","));
 
         setLoading(true);
         setProgress(0);
@@ -115,13 +205,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
         const dbMap = new Map();
         dbproducts.forEach(p => dbMap.set(String(p.sku), p));
 
-        const results = {
-            matched: [],
-            qtyMismatched: [],
-            priceMismatched: [],
-            newProducts: [],
-            deletedProducts: [] // Products in DB but NOT in Feed
-        };
+       
 
         // --- CHECK FOR UPDATES & NEW PRODUCTS ---
         livefeedproducts.forEach((feedProd) => {
@@ -408,11 +492,27 @@ function Livefeed_Updates({ supplier,setupd,update}) {
         // setrunUpdates(false);
 
 
-        console.log(updatedProds.newProducts);
+        console.log("Queued for updates: ",updatedProds);
+        if (updatedProds.newProducts.length > 0) {
+
         RunUpdates(updatedProds.newProducts, "insert");
-        RunUpdates(updatedProds.priceMismatched, "update");
-        RunUpdates(updatedProds.qtyMismatched, "");
-        RunUpdates(updatedProds.deletedProducts, "delete");
+        }
+
+        if(updatedProds.priceMismatched.length > 0) {
+            RunUpdates(updatedProds.priceMismatched, "update");
+        }
+        if(updatedProds.qtyMismatched.length > 0) {
+            RunUpdates(updatedProds.qtyMismatched, "");
+        }
+        if(updatedProds.qtyMismatched.length > 0) {
+            RunUpdates(updatedProds.qtyMismatched, "");
+        }
+        if(updatedProds.deletedProducts.length > 0) {
+            RunUpdates(updatedProds.deletedProducts, "delete");
+        }
+        if(updatedProds.deletedProducts.length > 0) {
+            RunUpdates(updatedProds.deletedProducts, "delete");
+        }
 
 
 
@@ -641,7 +741,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
                                       )}
                                   />
                               </div>
-                          </div>
+                          </div>    
                       ) : (
                           <div className="alert alert-info mt-3">
                               Click "Sync Feed" to check for product updates.
@@ -650,6 +750,7 @@ function Livefeed_Updates({ supplier,setupd,update}) {
                   </div>
                   <div style={{display:"flex",justifyContent:"right", width:"95%"}}>
                           <button onClick={ExecuteUpdates}>sync</button>
+                      <button onClick={() => {sendToMongo(livefeed_products ? livefeed_products :products)}}>Mongo</button>
                   </div>
 
 

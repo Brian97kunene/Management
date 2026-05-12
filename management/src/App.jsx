@@ -4,16 +4,18 @@ import { CSSTransition } from 'react-transition-group';
 import './UsersStyle.css'
 import ProdPop from './MyForm - Copy.jsx'
 import lastJson from './feedhandler.json'
+import MyClass from "./MyMethods";
 
 
 
-const ProductsTable = ({ products, refresh }) => {
+const ProductsTable = ({ products }) => {
     const port = 5552;
     const [users, setUsers] = useState([]);
 
     const [searchproducts, setsearchproducts] = useState([]);
     const [searchfield, setsearchfield] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [preciseSearch, setpreciseSearch] = useState(false);
     const [Updates, setUpdates] = useState(false);
 
     const [popUp, setpopUp] = useState(false);
@@ -34,7 +36,7 @@ const ProductsTable = ({ products, refresh }) => {
     //const [swish, setswish] = useState(false);
     const [progress, setProgress] = useState(0);
     const [prodVis, setProdVis] = useState(false);
-    const [fresh, rfresh] = useState(false);
+    const [refresh, setrefresh] = useState(false);
     const [markupprice, setmarkupprice] = useState([]);
 
 
@@ -75,9 +77,11 @@ const ProductsTable = ({ products, refresh }) => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
+                setUsers([])
                 const response = await fetch(`http://localhost:${port}/allproducts`);
                 const data = await response.json();
                 setUsers(data.data);
+                console.log("Fetched!")
             } catch (error) {
                 console.error("Error fetching users:", error);
 
@@ -85,7 +89,7 @@ const ProductsTable = ({ products, refresh }) => {
         };
         fetchUsers();
 
-    }, []);
+    }, [refresh, searchproducts]);
 
 
     useEffect(() => {
@@ -743,17 +747,29 @@ const ProductsTable = ({ products, refresh }) => {
             setProgress(0);
 
 
-            let response;
-            if (by === "Name") {
-                response = await fetch(`http://localhost:${port}/getproduct/byname/${xx}`);
-            } else {
-                response = await fetch(`http://localhost:${port}/getproduct/bysku/${xx}`);
-            }
+            
+            
+
+                if (preciseSearch) {
+
+                   const response = await MyClass.getpreciseproduct(xx, by);
+                    console.log(preciseSearch);
+                    
+                    console.log( response);
+                    setsearchproducts(response);
+                }
+                else {
+                    const response = await MyClass.getproduct(xx,by); 
+                    console.log(preciseSearch);
+                    console.log( response);
+                    setsearchproducts(response);
+                }
+
+            
             const interval = setInterval(() => {
                 setProgress((prev) => (prev < 100 ? prev + 10 : prev));
             }, 1000);
-            const data = await response.json();
-            setsearchproducts(data.data);
+            
             //clearInterval(interval);
         } catch (err) {
             console.error("Error fetching products:", err);
@@ -1139,7 +1155,11 @@ set name = 'WAITING FOR ROLLBACK';`;
                         )}
                         
 
-                        <div class="search_area" style={{ margin: "30px 0px 30px 50px", width: "90%" }}>
+                        <div class="search_area" style={{ margin: "30px 0px 30px 0px", width: "99%" }}>
+                            <div style={{ marginTop: "10px", marginLeft: "50px", marginBottom: "10px", padding: "5px" }}>
+                                <input id="showDBproduct_cb" style={{ marginTop: "10px", marginRight: "10px", marginBottom: "10px", padding: "5px" }} type="checkbox" onChange={() => setpreciseSearch(!preciseSearch)} />
+                                Precise Search (Search Database Products for Exact Matches)
+                            </div>
                             <span style={{ marginTop: "50px", marginLeft: "60px" }}>SEARCH:</span>
                             <input type="text" id="search_" onChange={() => search()} placeholder="Search products..."
                                 style={{ marginTop: "10px", marginBottom: "10px", marginRight: "20px", padding: "5px", width: "250px" }}
@@ -1155,6 +1175,7 @@ set name = 'WAITING FOR ROLLBACK';`;
                                 <option>SKU</option>
                             </select>
 
+
                             <div style={{ marginTop: "10px", marginLeft: "50px", marginBottom: "10px", padding: "5px" }}>
                                 <input id="showDBproduct_cb" style={{ marginTop: "10px", marginRight: "10px", marginBottom: "10px", padding: "5px" }} type="checkbox" onChange={() => ShowDbProducts()} />
                                 Check to Show Database Products
@@ -1162,10 +1183,10 @@ set name = 'WAITING FOR ROLLBACK';`;
                         </div>
 
 
-
+                        <button onClick={() => setrefresh(!refresh)}></button>
                         {(searchproducts.length > 0 && prodVis !== true) && (< div style={{
-                            width: "90%",
-                            marginLeft:"50px"
+                            width: "100%",
+                            marginLeft:"0px"
                         }} >
 
 
@@ -1189,18 +1210,19 @@ set name = 'WAITING FOR ROLLBACK';`;
                                 </thead>
                                 <tbody>
                                     {searchproducts.map((row) => (
-                                        <tr key={row.sku}>
+                                        <tr key={row.id}>
                                             {searchproducts && <>
 
                                                 <td>{row.name}</td>
                                                 <td>{row.sku}</td>
                                                 <td style={{ backgroundColor: "black", color: "white", fontWeight: "bold" }}>R{row.price}</td>
                                                 <td>{row.vendor}</td>
-                                                <td >{row.delivery_cost}</td>
+                                                <td >{row.bank_cost}</td>
                                                 <td>{row.category}</td>
                                                 <td>{row.quantity}</td>
                                                 <td>{row.mark_up}%</td>
-                                                <td style={{ backgroundColor: "black", color: "white", fontWeight: "bold" }}>{row.updated_on}</td>
+                                                <td style={{ backgroundColor: "black", color: "white", fontWeight: "bold" }}>{
+                                                    row.updated_on}</td>
                                                 <td><button onClick={() => editProduct(row)}>Edit</button></td>
                                             </>
                                             }
@@ -1256,7 +1278,7 @@ set name = 'WAITING FOR ROLLBACK';`;
 
                                         <tbody>
                                             {users.map((row, index) => (
-                                                <tr key={row.sku}>
+                                                <tr key={row.id}>
                                                     {searchproducts && <>
                                                         <td>{index + 1})</td>
                                                         <td>{row.name}</td>
@@ -1264,7 +1286,7 @@ set name = 'WAITING FOR ROLLBACK';`;
                                                         <td style={{ backgroundColor: "black", color: "white", fontWeight: "bold", }}>R{row.price}</td>
                                                         <td style={{ backgroundColor: "black", color: "white", fontWeight: "bold" }}>R{row.price_after_mark_up}</td>
                                                         <td>{row.vendor}</td>
-                                                        <td className="delivery_cost" style={{ backgroundColor: "#0c086b", color: "white", fontWeight: "bold" }}>{row.delivery_cost}</td>
+                                                        <td className="delivery_cost" style={{ backgroundColor: "#0c086b", color: "white", fontWeight: "bold" }}>{row.bank_cost}</td>
                                                         <td>{row.category}</td>
                                                         {row.quantity === 0 && <>
                                                             <td className="table-danger">{row.quantity}</td>

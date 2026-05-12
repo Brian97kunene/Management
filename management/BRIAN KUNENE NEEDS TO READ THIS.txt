@@ -1,0 +1,40 @@
+You are exactly right. That distinction is the fundamental line between **Client-Side** and **Server-Side** execution.
+
+### The Breakdown
+
+* **Frontend (JSX/React):** When a user visits your site, the server sends over a bundle of JavaScript (which started as JSX). The **user’s browser** (Chrome, Firefox, etc.) is what actually executes that code. If you are doing heavy data manipulation here, you are using the customer's CPU and RAM.
+* **Backend (Node/Express):** This code runs on **your hardware** (or your cloud provider's server). It has direct access to your PostgreSQL database and the file system.
+
+
+
+---
+
+### Why this matters for your performance:
+
+If you keep the heavy logic in the JSX, you run into three main "performance killers":
+
+#### 1. The "Main Thread" Bottleneck
+The browser uses a single thread to handle everything: painting the UI, responding to clicks, and running your JavaScript. If you ask the JSX to process a massive bulk selection or calculate complex pricing logic for 2,000 items:
+* **The Result:** The UI "hangs" or freezes because the browser is too busy crunching numbers to update the screen.
+
+#### 2. Data Overload (The "Hydration" Problem)
+To process things in the frontend, you first have to **get** the data there. 
+* **The Problem:** If you have 10MB of raw supplier data, your Express server has to send all 10MB over the internet to the browser.
+* **The Better Way:** Let the **Backend/Database** filter that 10MB down to the 50KB the user actually needs to see.
+
+#### 3. Database Efficiency
+Your PostgreSQL database is significantly faster at "bulk" operations than JavaScript is.
+* **Example:** If you need to update the stock for 500 items, doing it in the frontend means sending 500 individual API requests. Doing it in the backend allows you to use a **single SQL transaction**, which is exponentially faster and safer for data integrity.
+
+### When to move code to the Backend:
+| If the task is... | Move it to the Backend? |
+| :--- | :--- |
+| **Formatting a date for display** | No (Keep in Frontend) |
+| **Calculating total price from 1,000+ rows** | **Yes** |
+| **Filtering a list of items** | **Yes** (Use SQL `WHERE` clauses) |
+| **Handling file uploads/resizing** | **Yes** |
+| **Updating multiple database records** | **Yes** (Wrap in a Transaction) |
+
+**Pro Tip:** If you're seeing slow "Loading changes," check your **Network tab** in DevTools. If you see many small requests or one very long request, that's a sign that the "Server-Side" needs to take over some of that work.
+
+Does the "hang" happen specifically when the page first loads, or only when you try to perform an action like a bulk update?

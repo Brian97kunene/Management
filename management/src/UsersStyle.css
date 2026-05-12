@@ -196,6 +196,8 @@ button {
 
 .vendor_List {
     margin-left: 0px;
+
+
     width: auto;
     border: solid black 1px;
     padding: 20px;
@@ -393,7 +395,7 @@ margin-right:0px
 
 
 table tbody td {
-    width:auto;
+    max-width:150em;
 
 
 }
@@ -460,13 +462,25 @@ html {
     max-height: 400px; /* Or any height you want */
     overflow-y: auto; /* Enables the vertical scroll */
 }
+.table-container_1 {
+    max-height: auto; /* Or any height you want */
+    overflow-y: auto; /* Enables the vertical scroll */
+}
 
 table thead th {
-    position: sticky;
+    position: sticky    ;
     top: 0; /* Sticks to the very top of the container */
     background-color: #fff; /* Important: prevents rows from showing behind text */
-    z-index: 1; /* Ensures it stays above the table body rows */
+    z-index: 0; /* Ensures it stays above the table body rows */
     box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Optional: adds a nice border effect */
+}
+
+.stickyrowNumbers{
+    position: sticky    ;
+    left: 0; /* Sticks to the very top of the container */
+    background-color: #fff; /* Important: prevents rows from showing behind text */
+    z-index: 0; /* Ensures it stays above the table body rows */
+    box-shadow: 0 2px 2px -1px red; /* Optional: adds a nice border effect */
 }
 
 .spinner {
@@ -522,4 +536,48 @@ body {
     animation-duration: 3.5s;
     animation-timing-function: ease-in;
     animation-iteration-count: 1;
+}
+vendor_List {
+    animation-name: slideIn;
+    animation-duration: 3.5s;
+    animation-timing-function: ease-in;
+    animation-iteration-count: 1;
+}
+
+
+.Drag&Drop {
+    border: 2px dashed #333;
+    padding: 20px;
+    width: auto;
+    margin: 20px auto;
+    margin-left: 0px;
+    text-align: center;
+    background: #fafafa;
+    
+}
+.PopUpModal {
+    border: 2px dashed #333;
+    
+    position: sticky;
+    top: 0; /* Sticks to the very top of the container */
+    background-color: #fff; /* Important: prevents rows from showing behind text */
+    z-index: 1; /* Ensures it stays above the table body rows */
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4); /* Optional: adds a nice border effect */
+}
+
+
+
+
+.mongoLists {
+    list-style-type: none; /* Removes the bullets */
+    padding: 1em; /* Removes default indentation */
+    border: 1px solid black;
+    width: auto;
+}
+.mongoLisst {
+    list-style-type: none; /* Removes the bullets */
+
+    padding: 1em; /* Removes default vertical spacing */
+    border: 1px solid black;
+    width: auto;
 }

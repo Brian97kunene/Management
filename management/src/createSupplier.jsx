@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import PropTypes from 'prop-types';
 
 /*
@@ -9,19 +9,40 @@ import PropTypes from 'prop-types';
   - Displays simple status and error messages.
 */
 
-export default function CreateSupplier({ apiEndpoint = '/createvendor', onCreate }) {
+export default function CreateSupplier({ apiEndpoint = '/api/createsupplier', onCreate }) {
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+    const [dataFormat, setdataFormat] = useState("");
+
   const [form, setForm] = useState({
     name: '',
     email: '',
     phone: '',
     address: '',
-    notes: '',
+
   });
 
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-    const [dataFormat, setdataFormat] = useState("");
+
+
+    useEffect(() => {
+        const fetchL = () => {
+            
+
+            
+
+
+            console.log(dataFormat);
+        }
+
+
+        fetchL();
+    }
+
+        , [dataFormat]);
+
+
+
 
   function validate(current) {
     const e = {};
@@ -56,13 +77,19 @@ export default function CreateSupplier({ apiEndpoint = '/createvendor', onCreate
 
     setSubmitting(true);
     setStatusMessage('Creating supplier...');
-      let apiBody = JSON.stringify(form);
+     
+
+      let sup = { ...form, data_format: dataFormat }
+
+
+      console.log(sup);
+
 
     try {
-        const res = await fetch("http://localhost:5552"+apiEndpoint, {
+        const res = await fetch("http://localhost:5000"+apiEndpoint, {
         method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fom: form, dataformat: dataFormat }),
+            body: JSON.stringify({ supplier: sup}),
 
       });
 
@@ -70,7 +97,11 @@ export default function CreateSupplier({ apiEndpoint = '/createvendor', onCreate
         const payload = await res.json().catch(() => null);
         const message = payload && payload.message ? payload.message : `Server returned ${res.status}`;
         throw new Error(message);
-      }
+        }
+
+
+
+       
 
       const created = await res.json().catch(() => null);
       setStatusMessage('Supplier created successfully.');

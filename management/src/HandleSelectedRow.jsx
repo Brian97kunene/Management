@@ -177,7 +177,7 @@ function ManualRowSelection() {
     //const headers = Object.keys(prods[0]);
 
     return (
-        <div className="Live_Feed">
+        <div className="Live_Feeds">
 
            
 

@@ -509,6 +509,52 @@ class MyClass {
 
 
     }
+    static async getpreciseproduct(sku,filterby) {
+        const port = 5552;
+
+
+        console.log("looking for ",sku);
+
+        try {
+
+            if (filterby.toLowerCase() === "sku") {
+
+
+                const response = await fetch(`http://localhost:${port}/api/precise/getproduct/bysku/${sku}`);
+
+                var data = await response.json();   
+
+
+                return data.data;
+
+
+            }
+            else {
+                const response = await fetch(`http://localhost:${port}/api/precise/getproduct/byname/${sku}`);
+
+
+                var data = await response.json();   
+
+            return data.data;
+            }
+
+            //var prod = JSON.stringify( x ) ;
+
+
+
+
+        }
+        catch (err) {
+
+
+
+            return err;
+
+        };
+
+
+
+    }
 
 
 
@@ -551,7 +597,26 @@ class MyClass {
     }
 
     
+    //const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000/api/items";
 
+    //export const fetchItems = () => fetch(BASE_URL).then(r => r.json());
+    //export const fetchItem = (id) => fetch(`${BASE_URL}/${id}`).then(r => r.json());
+
+    //export const createItem = (data) => fetch(BASE_URL, {
+    //    method: "POST",
+    //    headers: { "Content-Type": "application/json" },
+    //    body: JSON.stringify(data),
+    //}).then(r => r.json());
+
+    //export const updateItem = (id, data) => fetch(`${BASE_URL}/${id}`, {
+    //    method: "PUT",
+    //    headers: { "Content-Type": "application/json" },
+    //    body: JSON.stringify(data),
+    //}).then(r => r.json());
+
+    //export const deleteItem = (id) => fetch(`${BASE_URL}/${id}`, {
+    //    method: "DELETE",
+    //}).then(r => r.json());
 
 }
 

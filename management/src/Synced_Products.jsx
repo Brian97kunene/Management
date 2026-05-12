@@ -4,6 +4,8 @@ import Duplicates from "./vendors";
 import { CSSTransition } from 'react-transition-group';
 import './UsersStyle.css'
 import { Button } from "bootstrap";
+import PopUp from './PopUp.jsx'
+
 
 
 // Main component showing list of users
@@ -11,25 +13,35 @@ import { Button } from "bootstrap";
 const ManualList = () => {
     const [products, setproducts] = useState([])
     const [product, setproduct] = useState({})
+    const [editproduct, seteditproduct] = useState(null)
     const [refresh, setrefresh] = useState(true)
+    const [popup, setpopup] = useState(false)
+    const [viewpopup, setviewpopup] = useState(true)
     const [duplicatesPopUp, setduplicatesPopUp] = useState(true)
     const [duplicatesProduct, setduplicatesProduct] = useState([])
     const [selectedSkus, setSelectedSkus] = useState(new Set());
     const [tip, settip] = useState("");
     const [tiip, settiip] = useState([]);
-
+    const [loading, setLoading] = useState(false); 
 
 
     useEffect(() => {
 
         const getEm = async () => {
 
+            setLoading(true)
 
             const response = await fetch(`http://localhost:5552/api/getsyncedproducts`);
             const data = await response.json();
+
+            setTimeout(() => {
+
             setproducts(data.data);
-            
+            setLoading(false)
+            }, 2000)
+
             console.log(data.data);
+            
         }
         getEm();
 
@@ -42,7 +54,6 @@ const ManualList = () => {
 
             console.log(selectedSkus);
            // var t = await MyClass.unsyncProducts(duplicatesProduct);
-
 
             
         }
@@ -114,19 +125,25 @@ const ManualList = () => {
         console.log(t);
     };
 
+    const handleSelection = (sku) => {
+        let x = document.getElementById(sku.id).checked;
 
+        x = selectedSkus.has(sku.sku) ? false : true; // Toggle the selection state 
+    }
 
     const toggleSelect = (sku) => {
-        const newSelection =[];
-        if (newSelection.includes(sku)) {
-        console.log();
-            
-        } else {
-            newSelection.push(sku);
-        }
-        setSelectedSkus((prev) => [...prev, sku]);
+        setSelectedSkus((prev) => {
+            // Create a BRAND NEW Set object from the previous one
+            const newSet = new Set(prev);
 
-        console.log(selectedSkus);
+            if (newSet.has(sku)) {
+                newSet.delete(sku);
+            } else {
+                newSet.add(sku);
+            }
+
+            return newSet; // React sees a new object and updates the UI immediately
+        });
     };
 
     // To handle the "Select All" header checkbox
@@ -145,6 +162,7 @@ const ManualList = () => {
     const checkDups = async () => {
 
         var p = [];
+       
 
         products.forEach((i) => {
             if (i.is_duplicate) {
@@ -178,9 +196,15 @@ const ManualList = () => {
 
 
         //return response.data;
+
+
+
+
         const [supp,pro] = await Promise.all([
-            MyClass.getOtherSupplier(p),
+            MyClass.getOtherSupplier(),
             MyClass.getAllDbProducts(),
+
+
 
         ])
         const a = new Map([]); 
@@ -208,7 +232,7 @@ const ManualList = () => {
             
 
 
-            if (i.sku === u.sku && i.supplier !== u.vendor) {
+            if (i.sku === u.sku && i.supplier !== u.supplier) {
                 console.log("match");
                 console.log(i);
                 console.log(u);
@@ -247,8 +271,8 @@ const ManualList = () => {
         console.log(aa);
        /* console.log(uniqueArr);*/
 
-        
-        console.log(tip)
+        setTitle(unique.map(i => i))
+       
     }
 
 
@@ -269,7 +293,7 @@ const ManualList = () => {
             }
         }
 
-        console.log(res);
+       // console.log(res);
         var t = "";
 
 
@@ -293,20 +317,12 @@ const ManualList = () => {
 
 
 
-    const Handle = (col) => {
+    const handle = (row) => {
         
-
-        console.log(col);
-
-        if (col.is_duplicate.toString() == "true") {
-
-            console.log("its a dup!!");
-            setduplicatesProduct(col)
-        }
-        else {
-            t.push(col)
-            console.log(t);
-        }
+        seteditproduct(row);
+        console.log(row);
+        setpopup(true);
+        
         
 
     }
@@ -321,20 +337,44 @@ const ManualList = () => {
         <div>
 
 
+
+            {/*loading animation*/}
+            {/*loading animation*/}
+            {/*loading animation*/}
+            
+
+
             <button onClick={() => setrefresh(!refresh)}></button>
-            {products.length === 0 && 
-                <div style={{ width: "95%", margin: "0px 0px 0px 0px", display: "flex", justifyContent: "left" }}>
-                    <h1 className="alert-warning alert" >No Products Queued</h1>
+            {products?.length === 0 && 
+                <div >
+               
+                    
+
+
+                    {loading && (
+                        <div style={{ margin: "0px 0", display: "flex", justifyContent: "center" }}>
+                            <div className="spinner" style={{ border: "4px solid #f3f3f3", borderTop: "4px solid #3498db", borderRadius: "50%", width: "100px", height: "100px", animation: "spin 1s linear infinite", margin: "0 auto" }}></div>
+
+                        </div>
+                    )}
+
                 </div>
+       
 
                 
             }
-            {products.length > 0 && (
+            {products?.length > 0 && (
                 <div style={{width:"99%", margin:"0px 0px 100px 0px"}}>
                 <div style={{width:"95%", margin:"0px 0px 50px 20px",display:"flex",justifyContent:"center"}}>
                         <h1>ALL  PRODUCTS QUED FOR SHOPIFY SYNC: </h1>
                     </div>
-                    
+
+
+
+
+
+
+
                     <table className="table table-striped">
                         <thead>
                             <tr>
@@ -352,9 +392,9 @@ const ManualList = () => {
                                     .map((col, indx) => (
                                         <th key={indx}>{col.toUpperCase()}</th>
                                     ))}
-                                    <th>Supplier</th>
+                                   
                                     <th>Has_Duplicate?</th>
-                                    <th>Duplicate </th>
+                                  
                             </tr>
                         </thead>
                           {/*checked={selectedSkus.has(row)}*/}
@@ -365,11 +405,12 @@ const ManualList = () => {
                                  
 
                                         <tr key={rowIndex}  >
-                                     <td><input
+                                    <td> <input
+                                        id={row.id}
                                         type="checkbox"
                                         checked={selectedSkus.has(row)} 
                           onChange={() => toggleSelect(row)}
-                      /></td>
+                      /> </td>
                                     {Object.keys(row).filter((col) => !columnsToExclude.includes(col)).map((col, colIndex) => (
                                             <>
                                             <td key={colIndex}>
@@ -377,24 +418,27 @@ const ManualList = () => {
                                             </td>
                                             </>
                                     ))}
-                                    <td>{ row.vendor}</td>
+                                 
                                     { row.is_duplicate.toString() === "true" ?
 
                                         <td title={row.name}  > <p className="alert-danger alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >YES</p> </td> : <td ><p className="alert-success alert" style={{ textAlign: "center", width: "60px", height: "50px", margin: "0px 0px 0px 10px" }} >NO</p></td>
                                     }
                                     {row.is_duplicate.toString() === "true" ?
 
-                                        < td key={row.id} > <button style={{ width: "100px" }} title={setTitle(row)} onClick={checkDups}>ACTIONS</button></td > : <td><span></span></td>
+                                        < td key={row.id} > <button style={{ width: "100px" }} title={tip} onClick={() => checkDups()}>ACTIONS</button></td > : <td><span></span></td>
 
                                    
                                     }
+                                    {row.is_duplicate.toString() === "true" ?
+
+                                        < td key={row.id + row.sku} > <button style={{ width: "100px" }} onClick={() => handle(row)}> SWITCH</button></td > : <td><span></span></td>
+
                                    
+                                    }
 
-                                    {row.is_duplicate.toString() === "true" ? ""  : ""}
 
-                                    <td>
-                                        {tip && tip.map((i, indx) => <span  style={{ margin: "0px 0px 0px 0px", color: "red"/*, width: "auto"*/, borderBottom: "1px solid black " }} key={indx}>{(row.sku === i.sku && row.vendor !== i.details.supplier) && <>  {i.details.supplier} - R{i.details.price} - Qty: {i.details.Qty} <br /> </>} </span>)}
-                                    </td>
+
+               
                                     
                     </tr>
                                         
@@ -404,10 +448,9 @@ const ManualList = () => {
                         </tbody>
                     </table>
                   
-                  
-
-                    {selectedSkus.size > 0 && <>
-                        <div style={{ width: "95%", margin: "0px 0px 50px 20px", display: "flex", justifyContent: "center" }}>
+                    
+                    {selectedSkus.size && <>
+                        <div style={{ width: "95%", margin: "0px 0px 50px 20px",Sisplay: "flex", justifyContent: "center" }}>
                             <button onClick={() => unsync()}>Remove Marked</button>
                         </div>
                     </>}
@@ -415,6 +458,17 @@ const ManualList = () => {
                     <button onClick={() => HandleSubmit(product)}>PUSH TO SHOPIFY</button>
                 </div>
             )}
+            {popup &&
+                (
+                    <>
+                    
+                    
+                     <PopUp product={editproduct} val={popup} close={() => setpopup(false)} />
+                    </>
+                )
+                
+            } 
+
         </div>
     );
 }

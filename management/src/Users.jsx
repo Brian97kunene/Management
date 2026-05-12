@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import './UsersStyle.css';
 import logo from './log.jpg';
 import File from "./createProduct.jsx";
+import Products from "./products.jsx";
 
 
 
@@ -13,6 +14,7 @@ const CrystalCommunications = () => {
 
 
 
+    
     // CRYSTAL COMM BLUE: #0c086b
     // CRYSTAL COMM BLUE: #0c086b
     // CRYSTAL COMM BLUE: #0c086b
@@ -26,7 +28,7 @@ const CrystalCommunications = () => {
                 <h1 style={{ marginTop: "0px", padding: "0px 50px 0px 50px", color: "#0c086b", fontFamily: "Century Schoolbook", fontWeight: "bold" }}>STOCK MANAGEMENT SYSTEM</h1>
             </div>
             </div>
-            
+
             <br/>
             <div style={{ display: "flex", justifyContent: "center" }}>
 

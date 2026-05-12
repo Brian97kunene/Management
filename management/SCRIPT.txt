@@ -1,0 +1,59 @@
+CREATE TABLE IF NOT EXISTS public.product
+(
+    id serial NOT NULL PRIMARY KEY  ,
+    name text COLLATE pg_catalog."default",
+    sku text COLLATE pg_catalog."default" NOT NULL,
+    description text COLLATE pg_catalog."default",
+    price numeric(10,2) DEFAULT 0,
+    bank_cost numeric(10,2) DEFAULT 50.0,
+    mark_up numeric(5,2)  DEFAULT 0,
+    vat numeric(5,2) DEFAULT 15.5,
+    supplier character varying(200) COLLATE pg_catalog."default",
+	    brand character varying(200) COLLATE pg_catalog."default",
+    category text DEFAULT 'No Data',
+    quantity integer DEFAULT 0,
+    created_on TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    detailed_description text DEFAULT 'No Data',
+    price_after_mark_up numeric(10,2) DEFAULT 0,
+ updated_on TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    supplier_code integer DEFAULT 0
+   
+  
+    
+     
+)
+
+
+add constraint uniq_sku unique (supplier_code,sku) 
+
+
+
+drop table vendor
+
+
+CREATE TABLE IF NOT EXISTS public.vendor
+(
+    id integer NOT NULL PRIMARY KEY,
+    name character varying(200) COLLATE pg_catalog."default",
+    contact character varying(10) COLLATE pg_catalog."default",
+    contact_name character varying(100) COLLATE pg_catalog."default",
+    email character varying(100) COLLATE pg_catalog."default",
+    address text COLLATE pg_catalog."default",
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    data_format text COLLATE pg_catalog."default"
+
+)
+
+
+
+
+
+
+
+
+
+
+*******           MUST ADD CONSTRAINTS AFTER  RUNNING CREATE COMMAND         ********
+*******           MUST ADD CONSTRAINTS AFTER  RUNNING CREATE COMMAND         ********
+*******           MUST ADD CONSTRAINTS AFTER  RUNNING CREATE COMMAND         ********

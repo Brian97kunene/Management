@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import Papa from "papaparse";
+import './UsersStyle.css';
 
 function CsvDropEditor(supplier) {
     const [fileName, setFileName] = useState("");
@@ -192,6 +193,92 @@ function CsvDropEditor(supplier) {
 
 
 
+
+
+
+
+    const sendToMongo = async (products) => {
+        const liveMap = new Map();
+
+        console.log("Products count:", products?.length);
+        console.log("Supplier:", supplier.supplier);
+
+        // 1. Populate the Map with the added supplier field
+        products.forEach(f => {
+            liveMap.set(String(f.sku), { ...f, metadata: { SupplierName: supplier.supplier.name, data_format: supplier.supplier.data_format } });
+        });
+
+
+        // Inside Livefeed_Updates.jsx before calling fetch/axios
+        const formattedData = products.map(item => ({
+            ...item,
+            // Convert metadata array [ {obj} ] to just {obj}
+            metadata: { SupplierName: supplier.supplier.name, data_format: supplier.supplier.data_format },
+
+            // Convert attributes object {brand: 'Intel'} to array [{key: 'brand', value: 'Intel'}]
+            attributes: item.attributes && !Array.isArray(item.attributes)
+                ? Object.entries(item.attributes).map(([key, value]) => ({ key, value }))
+                : item.attributes
+        }));
+
+        // Now send 'formattedData' instead of 'products'
+        console.log(formattedData);
+
+        // 2. Convert that Map back into an Array so JSON can handle it
+        const productsWithSupplier = Array.from(liveMap.values());
+
+        console.log("Data to be sent:", productsWithSupplier);
+
+
+
+
+        console.log(handleInsert());
+        var t = handleInsert();
+
+
+        const badItems = t.filter(p => !p.name || p.name.trim() === "");
+        const goodItems = t.filter(p => p.name && p.name.trim() !== "");
+        if (badItems.length > 0) {
+            console.error("Found products with missing names:", badItems);
+            badItems.forEach(prod => delete prod.name);
+        }
+
+
+        const cleanData = badItems.concat(goodItems);
+
+
+        const supData = cleanData.map(item => ({
+            ...item,
+            // Convert metadata array [ {obj} ] to just {obj}
+            metadata: { SupplierName: supplier.supplier.name, data_format: supplier.supplier.data_format }
+        }));
+
+        console.log(supData);
+
+        if (formattedData.length !== 0) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/createproducts`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    // 3. Send the UPDATED array, not the original 'products'
+                    body: JSON.stringify({
+                        productss:cleanData
+                    })
+                });
+
+                const result = response.status;
+                console.log("Server Response:", result);
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
+        }
+    };
+
+
+
     const updateDatabase = async () => {
         try {
             const response = await fetch("http://localhost:5552/api/update-csv", {
@@ -237,6 +324,11 @@ function CsvDropEditor(supplier) {
     };
 
     useEffect(() => {
+
+        console.log(manualMappings);
+
+    }, [manualMappings]);
+    useEffect(() => {
         if (rows.length > 0) {
 
             console.log("compare rowzzz");
@@ -244,7 +336,12 @@ function CsvDropEditor(supplier) {
  
             const lowerCaseKeys = Object.keys(rows[0]).map(key => key.toLowerCase());
 
+
+
+            setManualMappings(lowerCaseKeys);
+
             console.log(lowerCaseKeys)
+
             // console.log( Object.keys(rows[0].join(',')));
             compareColumns(lowerCaseKeys);
         }
@@ -349,8 +446,8 @@ function CsvDropEditor(supplier) {
         //const supplierdd = document.getElementById("vendordd").value;
 
         /*const v = await getSupplier1(supplier_name);*/
-        console.log(JSON.stringify(mappedRows), " mappedRows");
-        console.log(JSON.stringify(suppli), " supply");
+        //console.log(JSON.stringify(mappedRows), " mappedRows");
+       // console.log(JSON.stringify(suppli), " supply");
       /* console.log(v," supplier obj");*/
         try {
 
@@ -367,12 +464,12 @@ function CsvDropEditor(supplier) {
 
 
            /* console.log(supplierdd, " Dropdown");*/
-            console.log(suppli, " :fetch value");
+       //     console.log(suppli, " :fetch value");
             const result = await response.json();
             console.log("response: ",result);
             if (result.success) {
                 alert("Rows inserted successfully!");
-                console.log("Rows to add:  " + JSON.stringify(mappedRows, supplier));
+              //  console.log("Rows to add:  " + JSON.stringify(mappedRows, supplier));
             } else {
                 alert("Failed to insert rows.");
                 console.log(result);
@@ -401,26 +498,32 @@ function CsvDropEditor(supplier) {
         const str = [];
 
         console.log("selected: ",selectedRows);
+        console.log("manualMappings: ", manualMappings);
 
-        const rowsToInsert = selectedRows.map((i) => { // FOR ROWS
+        const rowsToInsert = selectedRows.map((row) => { // FOR ROWS
 
-            const row = i;
+            
             const mappedRow = {}; 
 
             Object.keys(row).forEach((fileCol) => { // FOR COLUMNS
-                const dbCol = manualMappings[fileCol];
-                if (dbCol) {
-                    mappedRow[dbCol] = row[fileCol];
+               
+
+                if (fileCol) {
+
+                    mappedRow[fileCol] = row[fileCol];
+
+                   
                 }
             });
             str.push(mappedRow);
             return mappedRow;
         });
 
+
+        return rowsToInsert;
         // Call your DB insert function
-        insertRowsToDb(rowsToInsert);
-            console.log(" ROWS THATS ARE RUINING MY LIFE");
-        console.log(str);
+       // insertRowsToDb(rowsToInsert);
+
     };
 
 
@@ -500,10 +603,19 @@ function CsvDropEditor(supplier) {
     // PAGINATION
 
 
+    const hovering = () => {
 
+        let x = {
+        }
+
+
+
+
+    }
 
         return (
             <div
+                class="Drag&Drop"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 style={{
@@ -660,9 +772,9 @@ function CsvDropEditor(supplier) {
                                                     checked={selectedRows.includes(row)}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
-                                                            setSelectedRows((prev) => [...prev, i]);
+                                                            setSelectedRows((prev) => [...prev, row]);
                                                         } else {
-                                                            setSelectedRows((prev) => prev.filter((idx) => idx !== i));
+                                                            setSelectedRows((prev) => prev.filter((r) => r !== row));
                                                         }
                                                     }}
                                                 />
@@ -709,6 +821,19 @@ function CsvDropEditor(supplier) {
                                 }}
                             >
                                 Insert Mapped Columns as Rows into DB
+                            </button>
+                            <button
+                                onClick={() => sendToMongo(selectedRows)}
+                                style={{
+                                    marginTop: "20px",
+                                    padding: "10px 20px",
+                                    background: "#673AC7",
+                                    color: "white",
+                                    border: "none",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Insert into MongoDB
                             </button>
 
 

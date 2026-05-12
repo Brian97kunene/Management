@@ -2,9 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import MyClass from './MyMethods.js'
 import searchTbl from './SearchTable.jsx'
 
-const ProductTable = ({ initialProducts }) => {
+
+const ProductTable = ({ initialProducts, supplier ,val}) => {
   // 1. Store products in a Map for fast O(1) updates
-  const [productMap, setProductMap] = useState(new Map(initialProducts.map(p => [p.sku, p])));
+  const [productMap, setProductMap] = useState(new Map());
 
 
 
@@ -21,20 +22,61 @@ const ProductTable = ({ initialProducts }) => {
     const [searchbyfield, setsearchbyfield] = useState("");
     const [searchproducts, setsearchproducts] = useState([]);
     const [progress, setProgress] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const [loading, setloading] = useState(true);
     const [refresh, setrefresh] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [ProdOffset, setProdOffset] = useState(0);
 
 
     useEffect(() => {
-        setProductMap(new Map(initialProducts.map(p => [p.sku, p])));
-        console.log("INITIALLY: ", initialProducts);
+        // handle submit data
+        const handleSubmit = async () => {
 
-        if (initialProducts.length > 0) {
-            setselectedSupp(initialProducts[0].supplier_code);
-            console.log(selectedSupp);
+
+            console.log(supplier);
+
+            const port = 5552;
+            try {
+                setloading(true);
+                const response = await fetch("http://localhost:" + port + "/getproduct/bysupplier/" + supplier.sup.id + "/" + ProdOffset);
+
+                const data = await response.json();
+                setProducts(data.data);
+
+                console.log("data :", JSON.stringify(data.data));
+                console.log("supplier :", supplier.sup.name);
+                console.log("open ? :", supplier.open);
+                //setUsers(data);
+            } catch (error) {
+                console.error("Error posting data:", error);
+            }
+            finally {
+
+
+                setloading(false);
+            }
+        }
+
+        handleSubmit()
+    }, [ProdOffset]);
+
+    useEffect(() => {
+        const getP = async () => { 
+            
+          
+        setProductMap(new Map(products.map(p => [ p.sku, p])));
+       
+            if (products.length > 0) {
+            setselectedSupp(products[0].supplier_code);
+         
              setsearchbyfield("Name");
         }
-    }, [initialProducts,refresh]);
+            
+            
+        }
+        getP();
+
+    }, [products]);
 
 
 
@@ -248,7 +290,7 @@ const ProductTable = ({ initialProducts }) => {
  
     const searchDb_ = async (xx, by) => {
         try {
-            setLoading(true); // show spinner
+            setloading(true); // show spinner
 
             setProgress(0);
 
@@ -271,7 +313,7 @@ const ProductTable = ({ initialProducts }) => {
         } catch (err) {
             console.error("Error fetching products:", err);
             setTimeout(() => {
-                setLoading(false);
+                setloading(false);
                 setProgress(0); // reset after short delay
             }, 1000);
 
@@ -280,7 +322,7 @@ const ProductTable = ({ initialProducts }) => {
 
         } finally {
             setTimeout(() => {
-                setLoading(false);
+                setloading(false);
                 setProgress(100); // reset after short delay
             }, 1000); // hide spinner
         }
@@ -314,7 +356,27 @@ const ProductTable = ({ initialProducts }) => {
     const [colo, setcolo] = useState(""); 
 
     // Convert Map back to array for rendering
-  const productList = useMemo(() => Array.from(productMap.values()), [productMap]);
+    const productList = useMemo(() => Array.from(productMap.values()), [productMap]);
+
+
+
+
+    const handleRowClick = (row) => {
+        console.log("Row clicked:", row);
+    }
+
+
+
+    const Paginate = (action) => {
+        if (action === "next") {
+            setProdOffset(i => i + 20);
+        } else {
+
+            if (ProdOffset > 0) {
+                setProdOffset(i => i - 20);
+            }
+        }
+    };
 
     return (
         <div >
@@ -347,16 +409,17 @@ const ProductTable = ({ initialProducts }) => {
 
             </div>
 
+            
 
 
 
-
-            {searchTerm && (<><h1 style={{ marginTop: "0px", marginRight: "00px" }}>Showing Database results of: "{searchTerm}"</h1>
+            {searchTerm && (<div style={{
+                width: "95%",
+                marginLeft: "0px"
+            }}  ><h1 style={{ marginTop: "0px", marginRight: "00px" }}>Showing Database results of: "{searchTerm}"</h1>
            
-                {(searchproducts.length > 0) && (< div class="wrappe" style={{
-                    width: "100%",
-                    marginLeft: "0px"
-                }} >
+                {(searchproducts.length > 0) && (< div 
+                >
                    
 
 
@@ -394,7 +457,7 @@ const ProductTable = ({ initialProducts }) => {
                 </div >
                 )
                 }
-            </>)}
+            </div>)}
             
             <div >
             
@@ -414,7 +477,12 @@ const ProductTable = ({ initialProducts }) => {
                     onChange={(e) => setBulkMarkup(e.target.value)}
                     placeholder="Markup % ..."
                     />
-               
+
+
+
+                
+
+                
       <table className="table table-striped">
       <thead>
         <tr>
@@ -446,9 +514,10 @@ const ProductTable = ({ initialProducts }) => {
         
         </tr>
       </thead>
-          <tbody>
+                    <tbody>
+                       
               {productList.map((row,indx) => (<>
-                  <tr key={row.sku}>
+                  <tr key={row.sku}  >
                       <td><input
                           type="checkbox"
                           checked={selectedSkus.has(row.sku)}
@@ -473,7 +542,7 @@ const ProductTable = ({ initialProducts }) => {
 
                       </td>
             <td>R{row.price_after_mark_up}</td>
-            <td>R{row.delivery_cost}</td>
+            <td>R{row.bank_cost}</td>
                       <td>{row.mark_up}%</td>
                       {row.quantity === null && <>
                           <td className="table-danger">0</td>
@@ -513,7 +582,21 @@ const ProductTable = ({ initialProducts }) => {
 
 
       </tbody>
-    </table>
+                </table>
+
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <button class="page-link" onClick={() => Paginate("prev")} >Previous</button>
+                        </li>
+
+                        <li class="page-item">
+                            <button class="page-link" onClick={() => Paginate("next")}>Next</button>
+                        </li>
+                    </ul>
+                </nav>
+
+
       </div>
       </div>
       
